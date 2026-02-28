@@ -11,17 +11,34 @@ from .strategies import get_strategy
 
 def main():
     logger = Logger()
-    logger.info("Starting")
+    logger.info("=" * 60)
+    logger.info("BINANCE TRADE BOT - Starting")
+    logger.info("=" * 60)
 
     config = Config()
+
+    # Validate configuration
+    if not config.BINANCE_API_KEY or not config.BINANCE_API_SECRET_KEY:
+        logger.error("API keys not configured. Please check user.cfg")
+        return
+
+    if config.TESTNET:
+        logger.warning("*" * 60)
+        logger.warning("  TESTNET MODE ACTIVE - No real funds will be used")
+        logger.warning("*" * 60)
+
     db = Database(logger, config)
     manager = BinanceAPIManager(config, db, logger, config.TESTNET)
-    # check if we can access API feature that require valid config
+
+    # Validate API connectivity and permissions
     try:
-        _ = manager.get_account()
+        account = manager.get_account()
+        logger.info(f"API connection successful. Account type: {account.get('accountType', 'SPOT')}")
     except Exception as e:  # pylint: disable=broad-except
         logger.error("Couldn't access Binance API - API keys may be wrong or lack sufficient permissions")
         logger.error(e)
+        if config.TESTNET:
+            logger.error("For testnet, ensure you're using API keys from https://testnet.binance.vision")
         return
     strategy = get_strategy(config.STRATEGY)
     if strategy is None:

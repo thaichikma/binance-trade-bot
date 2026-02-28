@@ -67,20 +67,41 @@ Create a .cfg file named `user.cfg` based off `.user.cfg.example`, then add your
 
 **The configuration file consists of the following fields:**
 
+#### Core Settings
 -   **api_key** - Binance API key generated in the Binance account setup stage.
 -   **api_secret_key** - Binance secret key generated in the Binance account setup stage.
 -   **testnet** - Default is false, whether to use the testnet or not
 -   **current_coin** - This is your starting coin of choice. This should be one of the coins from your supported coin list. If you want to start from your bridge currency, leave this field empty - the bot will select a random coin from your supported coin list and buy it.
 -   **bridge** - Your bridge currency of choice. Notice that different bridges will allow different sets of supported coins. For example, there may be a Binance particular-coin/USDT pair but no particular-coin/BUSD pair.
 -   **tld** - 'com' or 'us', depending on your region. Default is 'com'.
--   **hourToKeepScoutHistory** - Controls how many hours of scouting values are kept in the database. After the amount of time specified has passed, the information will be deleted.
--   **scout_sleep_time** - Controls how many seconds are waited between each scout.
+
+#### Trading Strategy Settings
+-   **strategy** - The trading strategy to use. See [`binance_trade_bot/strategies`](binance_trade_bot/strategies/README.md) for more information
 -   **use_margin** - 'yes' to use scout_margin. 'no' to use scout_multiplier.
 -   **scout_multiplier** - Controls the value by which the difference between the current state of coin ratios and previous state of ratios is multiplied. For bigger values, the bot will wait for bigger margins to arrive before making a trade.
 -   **scout_margin** - Minimum percentage coin gain per trade. 0.8 translates to a scout multiplier of 5 at 0.1% fee.
--   **strategy** - The trading strategy to use. See [`binance_trade_bot/strategies`](binance_trade_bot/strategies/README.md) for more information
--   **buy_timeout/sell_timeout** - Controls how many minutes to wait before cancelling a limit order (buy/sell) and returning to "scout" mode. 0 means that the order will never be cancelled prematurely.
 -   **scout_sleep_time** - Controls how many seconds bot should wait between analysis of current prices. Since the bot now operates on websockets this value should be set to something low (like 1), the reasons to set it above 1 are when you observe high CPU usage by bot or you got api errors about requests weight limit.
+-   **buy_timeout/sell_timeout** - Controls how many minutes to wait before cancelling a limit order (buy/sell) and returning to "scout" mode. 0 means that the order will never be cancelled prematurely.
+
+#### Market & Algo Trading Settings (NEW)
+-   **trade_market** - Market type to trade on. Options: `spot` (default), `futures`
+-   **algo_type** - Algorithmic trading strategy. Options: `none` (default), `twap`, `vp`
+    -   `none` - Standard spot/futures trading
+    -   `twap` - Time-Weighted Average Price execution
+    -   `vp` - Volume Participation execution
+-   **twap_duration** - TWAP order duration in seconds (default: 300). Only used when `algo_type=twap`
+-   **vp_urgency** - Volume Participation urgency level. Options: `LOW`, `MEDIUM`, `HIGH` (default: LOW). Only used when `algo_type=vp`
+
+#### Futures Trading Settings (NEW)
+-   **futures_leverage** - Leverage for futures trading (1-125, default: 1). Only used when `trade_market=futures`
+-   **futures_margin_type** - Margin type for futures. Options: `CROSSED` (default), `ISOLATED`
+
+#### Testnet Settings (NEW)
+-   **testnet_spot_url** - Spot testnet API URL (default: `https://testnet.binance.vision`)
+-   **testnet_futures_url** - Futures testnet API URL (default: `https://testnet.binancefuture.com`)
+
+#### Database Settings
+-   **hourToKeepScoutHistory** - Controls how many hours of scouting values are kept in the database. After the amount of time specified has passed, the information will be deleted.
 
 #### Environment Variables
 

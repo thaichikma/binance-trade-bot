@@ -1,17 +1,15 @@
-FROM --platform=$BUILDPLATFORM python:3.8 as builder
-
-WORKDIR /install
-
-RUN apt-get update && apt-get install -y rustc
-
-COPY requirements.txt /requirements.txt
-RUN pip install --prefix=/install -r /requirements.txt
-
-FROM python:3.13.2-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY --from=builder /install /usr/local
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
 CMD ["python", "-m", "binance_trade_bot"]

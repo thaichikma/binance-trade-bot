@@ -3,6 +3,7 @@ import configparser
 import os
 
 from .models import Coin
+from .constants import get_api_url, get_ws_url, get_exchange_name
 
 CFG_FL_NAME = "user.cfg"
 USER_CFG_SECTION = "binance_user_config"
@@ -24,6 +25,10 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "sell_timeout": "0",
             "buy_timeout": "0",
             "testnet": False,
+            "trade_market": "spot",
+            "algo_type": "none",
+            "twap_duration": "300",
+            "vp_urgency": "LOW",
         }
 
         if not os.path.exists(CFG_FL_NAME):
@@ -35,6 +40,16 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         self.BRIDGE_SYMBOL = os.environ.get("BRIDGE_SYMBOL") or config.get(USER_CFG_SECTION, "bridge")
         self.BRIDGE = Coin(self.BRIDGE_SYMBOL, False)
         self.TESTNET = os.environ.get("TESTNET") or config.getboolean(USER_CFG_SECTION, "testnet")
+
+        self.TRADE_MARKET = os.environ.get("TRADE_MARKET") or config.get(USER_CFG_SECTION, "trade_market")
+        self.ALGO_TYPE = os.environ.get("ALGO_TYPE") or config.get(USER_CFG_SECTION, "algo_type")
+        self.TWAP_DURATION = int(os.environ.get("TWAP_DURATION") or config.get(USER_CFG_SECTION, "twap_duration"))
+        self.VP_URGENCY = os.environ.get("VP_URGENCY") or config.get(USER_CFG_SECTION, "vp_urgency")
+
+        # Derived URL configurations (set after TLD is loaded below)
+        self._api_url = None
+        self._ws_url = None
+        self._exchange_name = None
 
         # Prune settings
         self.SCOUT_HISTORY_PRUNE_TIME = float(
@@ -77,3 +92,30 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
 
         self.USE_MARGIN = os.environ.get("USE_MARGIN") or config.get(USER_CFG_SECTION, "use_margin")
         self.SCOUT_MARGIN = float(os.environ.get("SCOUT_MARGIN") or config.get(USER_CFG_SECTION, "scout_margin"))
+
+        # Initialize derived URL configurations
+        self._api_url = get_api_url(self.TRADE_MARKET, self.TESTNET)
+        self._ws_url = get_ws_url(self.TRADE_MARKET, self.TESTNET)
+        self._exchange_name = get_exchange_name(self.TRADE_MARKET, self.TESTNET, self.BINANCE_TLD)
+
+    @property
+    def API_URL(self) -> str:
+        """REST API URL based on trade_market and testnet settings"""
+        return self._api_url
+
+    @property
+    def WS_URL(self) -> str:
+        """WebSocket URL based on trade_market and testnet settings"""
+        return self._ws_url
+
+    @property
+    def EXCHANGE_NAME(self) -> str:
+        """Exchange name for unicorn-binance-websocket-api"""
+        return self._exchange_name
+
+    def get_environment_info(self) -> str:
+        """Return formatted environment info for logging"""
+        mode = "TESTNET" if self.TESTNET else "PRODUCTION"
+        market = self.TRADE_MARKET.upper()
+        algo = self.ALGO_TYPE.upper() if self.ALGO_TYPE != "none" else "DISABLED"
+        return f"Mode: {mode} | Market: {market} | Algo: {algo} | API: {self._api_url}"

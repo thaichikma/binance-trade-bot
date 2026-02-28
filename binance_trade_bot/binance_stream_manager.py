@@ -75,9 +75,12 @@ class BinanceStreamManager:
     ):
         self.cache = cache
         self.logger = logger
-        exchange_name = f"binance.{config.BINANCE_TLD}"
-        if config.TESTNET:
-            exchange_name += "-testnet"
+        self.config = config
+
+        # Use exchange name from config (handles testnet/futures combinations)
+        exchange_name = config.EXCHANGE_NAME
+        self.logger.info(f"Initializing WebSocket streams with exchange: {exchange_name}")
+
         self.bw_api_manager = BinanceWebSocketApiManager(
             output_default="UnicornFy",
             enable_stream_signal_buffer=True,
@@ -89,12 +92,19 @@ class BinanceStreamManager:
             api_key=config.BINANCE_API_KEY,
             api_secret=config.BINANCE_API_SECRET_KEY,
         )
-        self.bw_api_manager.create_stream(
-            ["arr"],
-            ["!userData"],
-            api_key=config.BINANCE_API_KEY,
-            api_secret=config.BINANCE_API_SECRET_KEY,
-        )
+        # !userData stream uses Spot listen key mechanism.
+        # In Futures mode, skip it to avoid connection failures - order tracking
+        # is handled by the Futures client directly.
+        is_futures = getattr(config, 'TRADE_MARKET', 'spot').lower() == 'futures'
+        if not is_futures:
+            self.bw_api_manager.create_stream(
+                ["arr"],
+                ["!userData"],
+                api_key=config.BINANCE_API_KEY,
+                api_secret=config.BINANCE_API_SECRET_KEY,
+            )
+        else:
+            self.logger.info("Futures mode: skipping Spot !userData WebSocket stream")
         self.binance_client = binance_client
         self.pending_orders: Set[Tuple[str, int]] = set()
         self.pending_orders_mutex: threading.Lock = threading.Lock()
