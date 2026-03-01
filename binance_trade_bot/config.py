@@ -93,6 +93,56 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         self.USE_MARGIN = os.environ.get("USE_MARGIN") or config.get(USER_CFG_SECTION, "use_margin")
         self.SCOUT_MARGIN = float(os.environ.get("SCOUT_MARGIN") or config.get(USER_CFG_SECTION, "scout_margin"))
 
+        # Chipt Strategy Settings
+        self.CHIPT_PIVOT_LENGTH = int(
+            os.environ.get("CHIPT_PIVOT_LENGTH") or
+            config.get(USER_CFG_SECTION, "chipt_pivot_length", fallback="5")
+        )
+        self.CHIPT_MOMENTUM_THRESHOLD = float(
+            os.environ.get("CHIPT_MOMENTUM_THRESHOLD") or
+            config.get(USER_CFG_SECTION, "chipt_momentum_threshold", fallback="0.01")
+        )
+        self.CHIPT_TP_PERCENT = float(
+            os.environ.get("CHIPT_TP_PERCENT") or
+            config.get(USER_CFG_SECTION, "chipt_tp_percent", fallback="1.0")
+        )
+        self.CHIPT_SL_PERCENT = float(
+            os.environ.get("CHIPT_SL_PERCENT") or
+            config.get(USER_CFG_SECTION, "chipt_sl_percent", fallback="0.5")
+        )
+        self.CHIPT_MIN_SIGNAL_DISTANCE = int(
+            os.environ.get("CHIPT_MIN_SIGNAL_DISTANCE") or
+            config.get(USER_CFG_SECTION, "chipt_min_signal_distance", fallback="5")
+        )
+        self.CHIPT_MIN_CONFIDENCE = float(
+            os.environ.get("CHIPT_MIN_CONFIDENCE") or
+            config.get(USER_CFG_SECTION, "chipt_min_confidence", fallback="60")
+        )
+        self.CHIPT_USE_MOMENTUM_FILTER = (
+            os.environ.get("CHIPT_USE_MOMENTUM_FILTER", "").lower() == "true" or
+            config.getboolean(USER_CFG_SECTION, "chipt_use_momentum_filter", fallback=True)
+        )
+        self.CHIPT_USE_TREND_FILTER = (
+            os.environ.get("CHIPT_USE_TREND_FILTER", "").lower() == "true" or
+            config.getboolean(USER_CFG_SECTION, "chipt_use_trend_filter", fallback=True)
+        )
+        self.CHIPT_USE_VOLUME_FILTER = (
+            os.environ.get("CHIPT_USE_VOLUME_FILTER", "").lower() == "true" or
+            config.getboolean(USER_CFG_SECTION, "chipt_use_volume_filter", fallback=True)
+        )
+        self.CHIPT_USE_BREAKOUT_FILTER = (
+            os.environ.get("CHIPT_USE_BREAKOUT_FILTER", "").lower() == "true" or
+            config.getboolean(USER_CFG_SECTION, "chipt_use_breakout_filter", fallback=True)
+        )
+        self.CHIPT_HIGHER_TF = (
+            os.environ.get("CHIPT_HIGHER_TF") or
+            config.get(USER_CFG_SECTION, "chipt_higher_tf", fallback="5M")
+        )
+        self.CHIPT_LOWER_TF = (
+            os.environ.get("CHIPT_LOWER_TF") or
+            config.get(USER_CFG_SECTION, "chipt_lower_tf", fallback="5M")
+        )
+
         # Initialize derived URL configurations
         self._api_url = get_api_url(self.TRADE_MARKET, self.TESTNET)
         self._ws_url = get_ws_url(self.TRADE_MARKET, self.TESTNET)
